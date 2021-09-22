@@ -26,7 +26,7 @@ def bad_request(e):
 
 
 @app.errorhandler(405)
-def bad_request(e):
+def wrong_method(e):
     return jsonify(error=str(e)), 405
 
 
@@ -39,25 +39,27 @@ def exchange():
         if cur in available_cur:
             if value == "":
                 abort(400, description="Value field must not be empty")
+            elif value.startswith("-"):
+                abort(400, description="Value should be a positive number")
+            elif re.search(r'[!@#$%^&*()\[\]=+;\'{}\"/A-Za-zА-Яа-я]', value):
+                abort(400, description="Value should be a number")
             else:
-                if value.startswith("-"):
-                    abort(400, description="Value should be a positive number")
-                elif re.search(r'[!@#$%^&*()\[\]=+;\'{}\"/A-Za-zА-Яа-я]', value):
-                    abort(400, description="Value should be a number")
-                else:
-                    value = float(value)
-                    if cur == 'USD':
-                        result = '{:.2f}'.format(value / rate_parse("USD"))
-                    elif cur == 'EUR':
-                        result = '{:.2f}'.format(value / rate_parse("EUR"))
-                    elif cur == 'CHF':
-                        result = '{:.2f}'.format(value / rate_parse("CHF"))
-                    elif cur == 'GBP':
-                        result = '{:.2f}'.format(value / rate_parse("GBP"))
-                    elif cur == 'CNY':
-                        result = '{:.2f}'.format(value / rate_parse("CNY"))
-        else:
-            abort(405)
+                value = float(value)
+                if cur == 'USD':
+                    result = '{:.2f}'.format(value / rate_parse("USD"))
+                elif cur == 'EUR':
+                    result = '{:.2f}'.format(value / rate_parse("EUR"))
+                elif cur == 'CHF':
+                    result = '{:.2f}'.format(value / rate_parse("CHF"))
+                elif cur == 'GBP':
+                    result = '{:.2f}'.format(value / rate_parse("GBP"))
+                elif cur == 'CNY':
+                    result = '{:.2f}'.format(value / rate_parse("CNY"))
+    else:
+        abort(405)
+    if cur == "":
+        abort(400, description="Currency field must not be empty")
+    else:
         resp = {'Currency': cur,
                 'Money': result}
         return jsonify(resp)
